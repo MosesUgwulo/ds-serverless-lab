@@ -1,7 +1,7 @@
 import { Handler } from "aws-lambda";
 
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
+import { DeleteCommand, DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
 import { APIGatewayProxyHandlerV2 } from "aws-lambda";
 
 const ddbDocClient = createDDbDocClient();
@@ -28,24 +28,13 @@ export const handler: APIGatewayProxyHandlerV2 = async (event, context) => {
     }
 
     const commandOutput = await ddbDocClient.send(
-      new GetCommand({
+      new DeleteCommand({
         TableName: process.env.TABLE_NAME,
-        Key: { movieId: movieId },
+        Key: { movieId, },
       })
     );
     console.log("GetCommand response: ", commandOutput);
-    if (!commandOutput.Item) {
-      return {
-        statusCode: 404,
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({ Message: "Invalid movie Id" }),
-      };
-    }
-    const body = {
-      data: commandOutput.Item,
-    };
+
 
     // Return Response
     return {
@@ -53,7 +42,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event, context) => {
       headers: {
         "content-type": "application/json",
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ message: "Movie deleted" }),
     };
   } catch (error: any) {
     console.log(JSON.stringify(error));
